@@ -1,1 +1,198 @@
+Cosmos DB
 
+Custom log search
+All Administrative operations
+Update database account (Microsoft.DocumentDB/databaseAccounts)
+List keys (Microsoft.DocumentDB/databaseAccounts)
+Read database account readonly keys (Microsoft.DocumentDB/databaseAccounts)
+Rotate keys (Microsoft.DocumentDB/databaseAccounts)
+Get Connection Strings (Microsoft.DocumentDB/databaseAccounts)
+Change resource group (Microsoft.DocumentDB/databaseAccounts)
+Manual Failover (Microsoft.DocumentDB/databaseAccounts)
+Offline Region (Microsoft.DocumentDB/databaseAccounts)
+Online Region (Microsoft.DocumentDB/databaseAccounts)
+Refresh Delegate Resource (Microsoft.DocumentDB/databaseAccounts)
+Delete database accounts (Microsoft.DocumentDB/databaseAccounts)
+Get BackupPolicy (Microsoft.DocumentDB/databaseAccounts)
+Microsoft.DocumentDB/databaseAccounts/PrivateEndpointConnectionsApproval/action (Microsoft.DocumentDB/databaseAccounts)
+Microsoft.DocumentDB/databaseAccounts/restore/action (Microsoft.DocumentDB/databaseAccounts)
+Microsoft.DocumentDB/databaseAccounts/backup/action (Microsoft.DocumentDB/databaseAccounts)
+
+App Service
+
+Custom log search
+All Administrative operations
+Create or Update Web App (microsoft.web/sites)
+Delete Web App (microsoft.web/sites)
+Create Web App Backup (microsoft.web/sites)
+Get Web App Publishing Profile (microsoft.web/sites)
+Publish Web App (microsoft.web/sites)
+Restart Web App (microsoft.web/sites)
+Start Web App (microsoft.web/sites)
+Stop Web App (microsoft.web/sites)
+Swap Web App Slots (microsoft.web/sites)
+Get Web App Slots Differences (microsoft.web/sites)
+Apply Web App Configuration (microsoft.web/sites)
+Reset Web App Configuration (microsoft.web/sites)
+Approve Private Endpoint Connections (microsoft.web/sites)
+Functions Web Apps (microsoft.web/sites)
+List Web Apps Sync Function Trigger Status (microsoft.web/sites)
+Network Trace Web Apps (microsoft.web/sites)
+Newpassword Web Apps (microsoft.web/sites)
+Sync Web Apps (microsoft.web/sites)
+Migrate MySql Web Apps (microsoft.web/sites)
+Recover Web Apps (microsoft.web/sites)
+Restore Web Apps Snapshots (microsoft.web/sites)
+Restore Web Apps From Deleted App (microsoft.web/sites)
+Sync Web Apps Function Triggers (microsoft.web/sites)
+Discovers an existing app backup (microsoft.web/sites)
+Get Zipped Container Logs for Web App (microsoft.web/sites)
+Restore Web App From Backup Blob (microsoft.web/sites)
+List Web App backups (microsoft.web/sites)
+Copy content from deployment slot (microsoft.web/sites)
+1
+App service (Slot)
+
+All Administrative operations
+Apply Web App Slot Configuration (microsoft.web/sites/slots)
+Copy content from one deployment slot to another (microsoft.web/sites/slots)
+Create or Update Web App Slot (microsoft.web/sites/slots)
+Create Web App Slot Backup (microsoft.web/sites/slots)
+Custom log search
+Delete Web App Slot (microsoft.web/sites/slots)
+Discover Web Apps Slots Backups (microsoft.web/sites/slots)
+Get Web App Slot Publishing Profile (microsoft.web/sites/slots)
+Get Web App Slots Differences (microsoft.web/sites/slots)
+Get Zipped Container Logs for Web App Slot (microsoft.web/sites/slots)
+List Web App Slot backups (microsoft.web/sites/slots)
+List Web Apps Sync Function Trigger Status for deployment slot (microsoft.web/sites/slots)
+Network Trace Web Apps Slots (microsoft.web/sites/slots)
+Newpassword Web Apps Slots (microsoft.web/sites/slots)
+Publish Web App Slot (microsoft.web/sites/slots)
+Recover Web Apps Slots (microsoft.web/sites/slots)
+Reset Web App Slot Configuration (microsoft.web/sites/slots)
+Restart Web App Slot (microsoft.web/sites/slots)
+Restore Web App Slots From Deleted App (microsoft.web/sites/slots)
+Restore Web Apps Slot From Backup Blob (microsoft.web/sites/slots)
+Restore Web Apps Slots Snapshots (microsoft.web/sites/slots)
+Start Web App Slot (microsoft.web/sites/slots)
+Stop Web App Slot (microsoft.web/sites/slots)
+Swap Web App Slots (microsoft.web/sites/slots)
+Sync Web Apps Function Triggers for deployment slot (microsoft.web/sites/slots)
+Sync Web Apps Slots (microsoft.web/sites/slots)
+
+App service plan
+
+Custom log search
+All Administrative operations
+Create or Update App Service Plan (microsoft.web/serverfarms)
+Delete App Service Plan (microsoft.web/serverfarms)
+Join App Service Plan (microsoft.web/serverfarms)
+Restart Web Apps (microsoft.web/serverfarms)
+
+Application Insights
+
+Custom log search
+All Administrative operations
+Application Insights analytics table action (Microsoft.Insights/Components)
+Application Insights API key generate (Microsoft.Insights/Components)
+Application Insights Purge Data action (Microsoft.Insights/Components)
+Application Insights component daily cap reached (Microsoft.Insights/Components)
+Application Insights component daily cap warning threshold reached (Microsoft.Insights/Components)
+Application insights component write (Microsoft.Insights/Components)
+Application insights component delete (Microsoft.Insights/Components)
+Application Insights export settings action (Microsoft.Insights/Components)
+Application Insights Component Move (Microsoft.Insights/Components)
+
+All cloud services (extended support)
+
+Custom log search
+All Administrative operations
+Create or Update CloudService. (Microsoft.Compute/cloudServices)
+Delete the CloudService. (Microsoft.Compute/cloudServices)
+Power off the CloudService. (Microsoft.Compute/cloudServices)
+Starts the CloudService. (Microsoft.Compute/cloudServices)
+Restarts one or more role instances in a CloudService. (Microsoft.Compute/cloudServices)
+Reimage one or more role instances in a CloudService. (Microsoft.Compute/cloudServices)
+Rebuilds all the disks in the role instances in a CloudService. (Microsoft.Compute/cloudServices)
+Deletes role instances in a CloudService. (Microsoft.Compute/cloudServices)
+
+All front door and cdn profiles
+
+Custom log search
+All Administrative operations
+write (Microsoft.Cdn/profiles)
+delete (Microsoft.Cdn/profiles)
+CheckResourceUsage (Microsoft.Cdn/profiles)
+GenerateSsoUri (Microsoft.Cdn/profiles)
+GetSupportedOptimizationTypes (Microsoft.Cdn/profiles)
+CheckHostNameAvailability (Microsoft.Cdn/profiles)
+Usages (Microsoft.Cdn/profiles)
+
+Key Vault
+
+Custom log search
+All Administrative operations
+Update Key Vault (Microsoft.KeyVault/vaults)
+Delete Key Vault (Microsoft.KeyVault/vaults)
+Use Vault for Azure Deployments (Microsoft.KeyVault/vaults)
+Approve or reject a Private Endpoint connection (Microsoft.KeyVault/vaults)
+
+All load balancers
+
+Custom log search
+All Administrative operations
+Create or Update Load Balancer (Microsoft.Network/loadBalancers)
+Delete Load Balancer (Microsoft.Network/loadBalancers)
+Get Health Summary of Load Balancer (Microsoft.Network/loadBalancers)
+
+public ip addresses
+
+Custom log search
+All Administrative operations
+Create or Update Public Ip Address (Microsoft.Network/publicIPAddresses)
+Delete Public Ip Address (Microsoft.Network/publicIPAddresses)
+Join Public Ip Address. (Microsoft.Network/publicIPAddresses)
+
+ service bus namespaces
+
+Custom log search
+All Administrative operations
+Create Or Update Namespace (Microsoft.ServiceBus/namespaces)
+Delete Namespace (Microsoft.ServiceBus/namespaces)
+Updates Namespace Authorization Rule (Deprecated) (Microsoft.ServiceBus/namespaces)
+Migrate namespace operation (Microsoft.ServiceBus/namespaces)
+Remove ACS namespace (Microsoft.ServiceBus/namespaces)
+Approve Private Endpoint Connection (Microsoft.ServiceBus/namespaces)
+
+storage accounts
+
+Custom log search
+All Administrative operations
+Microsoft.Storage/storageAccounts/updateInternalProperties/action (Microsoft.Storage/storageAccounts)
+Abort Account HnsOn Migration (Microsoft.Storage/storageAccounts)
+Account HnsOn Migration (Microsoft.Storage/storageAccounts)
+Restore blob ranges (Microsoft.Storage/storageAccounts)
+Approve Private Endpoint Connections (Microsoft.Storage/storageAccounts)
+Storage Account Failover (Microsoft.Storage/storageAccounts)
+List Storage Account Keys (Microsoft.Storage/storageAccounts)
+Regenerate Storage Account Keys (Microsoft.Storage/storageAccounts)
+Microsoft.Storage/storageAccounts/rotateKey/action (Microsoft.Storage/storageAccounts)
+Revoke Storage Account User Delegation Keys (Microsoft.Storage/storageAccounts)
+Delete Storage Account (Microsoft.Storage/storageAccounts)
+Returns Storage Account SAS Token (Microsoft.Storage/storageAccounts)
+Returns Storage Service SAS Token (Microsoft.Storage/storageAccounts)
+Create/Update Storage Account (Microsoft.Storage/storageAccounts)
+
+virtual networks
+
+Custom log search
+All Administrative operations
+Create or Update Virtual Network (Microsoft.Network/virtualNetworks)
+Delete Virtual Network (Microsoft.Network/virtualNetworks)
+Join load balancer to virtual networks (Microsoft.Network/virtualNetworks)
+Peer Virtual Networks (Microsoft.Network/virtualNetworks)
+Join Virtual Network. (Microsoft.Network/virtualNetworks)
+Get Bastion Host associated with the Virtual Network. (Microsoft.Network/virtualNetworks)
+List Network Manager Effective Connectivity Configurations (Microsoft.Network/virtualNetworks)
+List Network Manager Effective Security Admin Rules (Microsoft.Network/virtualNetworks)
