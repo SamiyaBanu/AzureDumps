@@ -17,3 +17,8 @@
 |                       | Mean Time to Recovery     | Time taken to recover from a failed deployment                    | Line Chart                  |
 | User Activity         | Pipelines by User         | User or system triggering each pipeline                           | Bar Chart                   |
 |                       | Most Active Pipelines     | Pipelines with the highest execution frequency                    | Bar Chart                   |
+Category	Metric Name	Description	Recommended Panel Type
+Stage Metrics	Stage Run Count	Total number of times each stage was executed	Bar Chart
+Stage Success Rate (%)	% of successful stage executions per pipeline	Single Value / Table
+Stage Failure Count	Number of times a stage failed	Bar Chart
+Stage Duration	Time taken by each stage in the pipeline	Line Chart / Bar Chart
