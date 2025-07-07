@@ -1,0 +1,19 @@
+### 📋 Essential Azure DevOps Pipeline Metrics for Monitoring
+
+| Category              | Metric Name               | Description                                                       | Recommended Panel Type     |
+|-----------------------|---------------------------|-------------------------------------------------------------------|-----------------------------|
+| Pipeline Overview     | Total Pipeline Runs       | Total number of pipeline executions                               | Line Chart / Bar Chart      |
+|                       | Success Rate (%)          | Percentage of successful pipeline runs                            | Single Value                |
+|                       | Failure Rate (%)          | Percentage of failed pipeline runs                                | Single Value                |
+|                       | Success vs Failure Breakdown | Comparison of successful vs failed runs                        | Pie Chart / Stacked Bar     |
+| Execution Performance | Pipeline Duration         | Average time taken for full pipeline runs                         | Line Chart                  |
+|                       | Job/Stage Duration        | Time taken by individual jobs or stages                           | Bar Chart                   |
+|                       | Queued Time               | Time spent waiting in the agent queue before start                | Line Chart                  |
+| Deployment Metrics    | Deployment Success Count  | Number of successful deployments to environments                  | Bar Chart                   |
+|                       | Deployment Failure Count  | Number of failed deployments                                      | Bar Chart                   |
+|                       | Deployment Frequency      | Frequency of deployments to Dev/QA/Prod                           | Grouped Bar Chart           |
+|                       | Deployment Duration       | Time taken for deployment execution                               | Line Chart                  |
+| Change Insights       | Commits per Pipeline Run  | Number of commits triggering each pipeline run                    | Table / Bar Chart           |
+|                       | Mean Time to Recovery     | Time taken to recover from a failed deployment                    | Line Chart                  |
+| User Activity         | Pipelines by User         | User or system triggering each pipeline                           | Bar Chart                   |
+|                       | Most Active Pipelines     | Pipelines with the highest execution frequency                    | Bar Chart                   |
