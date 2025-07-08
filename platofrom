@@ -1,0 +1,16 @@
+| **Tool / Platform**         | **Check Type**              | **Metric / Check**                       | **Description / Goal**                                |
+|-----------------------------|-----------------------------|------------------------------------------|--------------------------------------------------------|
+| Ansible                     | Service Reachability        | API / CLI Connectivity                   | Can your VM connect to the Ansible control node?       |
+|                             | Playbook Execution Status   | Last Run Exit Code / Logs                | Did the last playbook run successfully?                |
+
+| Red Hat Automation Platform | Web UI/API Health           | HTTP 200 OK / Login Status               | Is the Automation Platform web UI/API responding?      |
+|                             | Job Template Status         | Job Completion Status                    | Are job templates completing without errors?           |
+
+| ServiceNow                  | API Status                  | HTTP Status Code                         | Can your scripts/API calls connect to ServiceNow?      |
+|                             | Ticket Sync Health          | Success/Error Count                      | Are incident/change requests syncing successfully?     |
+
+| SDI (Software Delivery Infra) | Deployment API Health     | Deployment API Response                  | Is SDI platform responding to automation/API calls?    |
+|                             | Deployment Status           | Last Deployment State                    | Are recent deployments in `SUCCEEDED` state?           |
+
+| iFabric                     | URL/API Status              | Ping or HTTP Check                       | Is the iFabric interface reachable and healthy?        |
+|                             | Config Push Status          | Last Push Success/Failure                | Did the last config push succeed?                      |
