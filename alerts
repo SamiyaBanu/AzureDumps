@@ -1,0 +1,15 @@
+You should set up alerts on:
+
+CPU usage > 90% for 5+ minutes
+
+Disk usage > 80%
+
+Memory usage > 80%
+
+SSH login failures > 5 within 1 minute
+
+Network interface errors
+
+Ping latency > 100ms to internal IPs
+
+No heartbeat/data received in 5 minutes
