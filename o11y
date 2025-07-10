@@ -1,0 +1,82 @@
+if ($null -ne $task.startTime) {
+    $startTime_epoch = [int][double]((Get-Date $task.startTime).ToUniversalTime() - (Get-Date "01/01/1970")).TotalSeconds * 1000
+}
+
+if ($null -ne $task.finishTime) {
+    $finishTime_epoch = [int][double]((Get-Date $task.finishTime).ToUniversalTime() - (Get-Date "01/01/1970")).TotalSeconds * 1000
+}
+
+if ($null -ne $task.startTime -and $null -ne $task.finishTime) {
+    $duration = [int][double]((Get-Date $task.finishTime).ToUniversalTime() - (Get-Date $task.startTime).ToUniversalTime()).TotalSeconds
+} else {
+    $duration = 0
+}
+
+# Common dimensions
+$dimensions = @{
+    pipeline_id       = "$(System.DefinitionId)"
+    pipeline_name     = "$(System.DefinitionName)"
+    pipeline_run_id   = "$(Build.BuildId)"
+    pipeline_run_name = "$(Build.BuildNumber)"
+    template          = "${{ parameters.template }}"
+    stageName         = "$(System.StageDisplayName)"
+    jobName           = "$(System.JobDisplayName)"
+    taskName          = $task.name
+    taskResult        = $task.result
+}
+
+# TTL in seconds (30 days)
+$ttl = 2592000
+
+# Metric: task.start
+$gauge_start = @{
+    metric     = "metric.pipeline.run.task.start"
+    value      = $startTime_epoch
+    timestamp  = $startTime_epoch
+    dimensions = $dimensions
+    ttl        = $ttl
+}
+
+# Metric: task.finish
+$gauge_finish = @{
+    metric     = "metric.pipeline.run.task.finish"
+    value      = $finishTime_epoch
+    timestamp  = $finishTime_epoch
+    dimensions = $dimensions
+    ttl        = $ttl
+}
+
+# Metric: task.duration
+$gauge_duration = @{
+    metric     = "metric.pipeline.run.task.duration"
+    value      = if ($duration -eq 0) { 1 } else { $duration }
+    timestamp  = $finishTime_epoch
+    dimensions = $dimensions
+    ttl        = $ttl
+}
+
+# Combine all metrics
+$gauge = @{
+    gauge = @($gauge_start, $gauge_finish, $gauge_duration)
+}
+
+# Send to Splunk
+try {
+    $jsonPayload = $gauge | ConvertTo-Json -Depth 10 -Compress
+    Write-Host "Sending metrics to Splunk Observability:"
+    Write-Host $jsonPayload
+
+    $response = Invoke-RestMethod -Method Post `
+        -Uri $env:SPLUNK_OBSERVABILITY_URL `
+        -Headers @{
+            "Content-Type" = "application/json"
+            "X-SF-TOKEN"   = $env:SPLUNK_TOKEN
+        } `
+        -Body $jsonPayload `
+        -StatusCodeVariable status
+
+    Write-Host "Status: $status"
+    Write-Host "Response: $response"
+} catch {
+    Write-Host "Unsuccessful: $($_.Exception.Message)"
+}
