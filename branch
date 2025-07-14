@@ -1,0 +1,62 @@
+# ========== CONFIG ==========
+$organization = "<your-org-name>"
+$project = "<your-project-name>"
+$buildId = $env:BUILD_BUILDID
+$pat = "<your-azure-devops-pat>"  # Store this securely
+$hecUrl = "https://<your-splunk-host>:8088/services/collector"
+$hecToken = "<your-splunk-hec-token>"  # Store securely
+# ============================
+
+# Basic Auth for Azure DevOps REST API
+$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$pat"))
+
+# 1. GET pipeline run details
+$pipelineUrl = "https://dev.azure.com/$organization/$project/_apis/build/builds/$buildId?api-version=7.1-preview.7"
+$pipelineDetails = Invoke-RestMethod -Uri $pipelineUrl -Method Get -Headers @{Authorization = "Basic $base64AuthInfo"}
+
+# 2. Extract Branch & Git Info
+$branchFull = $pipelineDetails.sourceBranch
+$branchName = $branchFull -replace "refs/heads/", ""
+$commitId = $pipelineDetails.sourceVersion
+$repoName = $pipelineDetails.repository.name
+$repoProvider = $pipelineDetails.repository.type
+$repoUri = $pipelineDetails.repository.url
+
+# 3. Construct telemetry payload
+$payload = @{
+    event = "azure_devops_pipeline"
+    source = "azure-devops"
+    host = $env:AGENT_NAME
+    time = [math]::Round((Get-Date -UFormat %s))
+    fields = @{
+        project         = $env:SYSTEM_TEAMPROJECT
+        pipeline        = $env:BUILD_DEFINITIONNAME
+        buildNumber     = $env:BUILD_BUILDNUMBER
+        buildId         = $env:BUILD_BUILDID
+        status          = $env:BUILD_STATUS
+        result          = $env:AGENT_JOBSTATUS
+        trigger         = $env:BUILD_REASON
+        requestedBy     = $env:BUILD_REQUESTEDFOR
+        startTime       = $env:BUILD_STARTTIME
+
+        # Git / Branch Details
+        branchName      = $branchName
+        fullBranch      = $branchFull
+        commitId        = $commitId
+        repoName        = $repoName
+        repoProvider    = $repoProvider
+        repoUri         = $repoUri
+    }
+}
+
+# 4. Convert to JSON
+$jsonPayload = $payload | ConvertTo-Json -Depth 4
+
+# 5. Send to Splunk
+$response = Invoke-RestMethod -Uri $hecUrl `
+    -Method Post `
+    -Body $jsonPayload `
+    -Headers @{ Authorization = "Splunk $hecToken" } `
+    -ContentType 'application/json'
+
+Write-Host "Telemetry sent to Splunk. Response: $response"
