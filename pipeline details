@@ -1,0 +1,78 @@
+# send-to-splunk.yml
+parameters:
+  - name: splunkToken
+    type: string
+
+  - name: splunkRealm
+    type: string
+    default: "us0"
+
+jobs:
+  - job: SendTelemetry
+    displayName: "Send Pipeline Telemetry to Splunk"
+    condition: always()
+    steps:
+      - powershell: |
+          try {
+            Write-Host "📡 Collecting pipeline metadata..."
+            
+            $organization = "$(System.TeamFoundationCollectionUri)" -replace "https://dev.azure.com/", ""
+            $project = "$(System.TeamProject)"
+            $runId = "$(Build.BuildId)"
+            $pipelineId = "$(System.DefinitionId)"
+            $token = "$(System.AccessToken)"
+
+            $headers = @{
+              Authorization = "Bearer $token"
+              "Content-Type" = "application/json"
+            }
+
+            $url = "https://dev.azure.com/$organization/$project/_apis/pipelines/$pipelineId/runs/$runId?api-version=7.1-preview.1"
+            $response = Invoke-RestMethod -Uri $url -Headers $headers -Method Get
+
+            $startTime = $response.createdDate
+            $finishTime = $response.finishedDate
+            $duration = [datetime]$finishTime - [datetime]$startTime
+            $branch = $response.resources.repositories.self.refName -replace 'refs/heads/', ''
+            $triggeredBy = $response.requestedBy.displayName
+            $status = $response.state
+            $result = $response.result
+            $now = [int64]((Get-Date).ToUniversalTime() - [datetime]'1970-01-01').TotalSeconds * 1000
+
+            Write-Host "✅ Collected pipeline metadata. Sending to Splunk..."
+
+            $payload = @(
+                @{
+                    "metric" = "pipeline.run.duration"
+                    "value" = $duration.TotalSeconds
+                    "timestamp" = $now
+                    "dimensions" = @{
+                        "pipeline_id" = $pipelineId
+                        "run_id" = $runId
+                        "branch" = $branch
+                        "triggered_by" = $triggeredBy
+                        "status" = $status
+                        "result" = $result
+                        "project" = $project
+                    }
+                    "type" = "gauge"
+                }
+            )
+
+            $splunkUrl = "https://ingest.${{ parameters.splunkRealm }}.signalfx.com/v2/datapoint"
+
+            Invoke-RestMethod -Uri $splunkUrl -Headers @{
+              "X-SF-TOKEN" = "${{ parameters.splunkToken }}"
+              "Content-Type" = "application/json"
+            } -Method Post -Body (ConvertTo-Json $payload -Depth 10)
+
+            Write-Host "✅ Telemetry successfully sent to Splunk."
+          }
+          catch {
+            Write-Error "❌ Failed to send telemetry: $($_.Exception.Message)"
+            # Optional: Exit with non-zero to fail the job
+            # exit 1
+          }
+        displayName: "Send Telemetry to Splunk"
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
