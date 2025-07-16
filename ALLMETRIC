@@ -1,0 +1,77 @@
+# Initialize empty array for gauges
+$allGaugeMetrics = @()
+
+# Loop through each task
+foreach ($task in $tasks) {
+    # Assume you compute these per task
+    $startTime_epoch = ...
+    $finishTime_epoch = ...
+    $duration = ...
+    $now = [int64]((Get-Date).ToUniversalTime() - [datetime]'1970-01-01').TotalSeconds * 1000
+    $dimensions = @{
+        "branch" = $branch
+        "status" = $status
+        "task"   = $task.name
+    }
+
+    # Gauge metrics
+    $gauge_start = @{
+        "metric" = "pipeline.start.time"
+        "value" = $startTime_epoch
+        "timestamp" = $now
+        "dimensions" = $dimensions
+    }
+
+    $gauge_finish = @{
+        "metric" = "pipeline.finish.time"
+        "value" = $finishTime_epoch
+        "timestamp" = $now
+        "dimensions" = $dimensions
+    }
+
+    $gauge_duration = @{
+        "metric" = "pipeline.duration"
+        "value" = $duration
+        "timestamp" = $now
+        "dimensions" = $dimensions
+    }
+
+    # Add these metrics to the main array
+    $allGaugeMetrics += $gauge_start
+    $allGaugeMetrics += $gauge_finish
+    $allGaugeMetrics += $gauge_duration
+}
+
+# Add counter metric outside loop (one per pipeline run)
+$counterMetric = @{
+    "metric" = "pipeline.run.count"
+    "value" = 1
+    "timestamp" = $now
+    "dimensions" = @{
+        "branch" = $branch
+        "status" = $status
+    }
+}
+
+# Final payload: all gauge + counter
+$payload = @{
+    "gauge"   = $allGaugeMetrics
+    "counter" = @($counterMetric)
+}
+
+# Send all in one request
+try {
+    Write-Host "Sending combined payload..."
+    Write-Host ($payload | ConvertTo-Json -Depth 10)
+
+    $response = Invoke-RestMethod -Method Post -Uri $env:SPLUNK_OBSERVABILITY_URL -Headers @{
+        "Content-Type" = "application/json"
+        "X-SF-TOKEN"    = $env:SPLUNK_TOKEN
+    } -Body ($payload | ConvertTo-Json -Depth 10) -StatusCodeVariable status
+
+    Write-Host "status: $status"
+    Write-Host "response: $response"
+}
+catch {
+    Write-Host "Error: $_"
+}
