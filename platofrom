@@ -1,3 +1,10 @@
+⚠️ Current Challenge
+🎯 Objective
+🚀 Work Done
+🔧 Next Steps
+
+
+
 | **Tool / Platform**         | **Check Type**              | **Metric / Check**                       | **Description / Goal**                                |
 |-----------------------------|-----------------------------|------------------------------------------|--------------------------------------------------------|
 | Ansible                     | Service Reachability        | API / CLI Connectivity                   | Can your VM connect to the Ansible control node?       |
