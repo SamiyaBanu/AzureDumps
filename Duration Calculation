@@ -19,3 +19,31 @@ catch {
     Write-Error "❌ General error occurred while processing pipeline telemetry: Failed to calculate duration: $_"
     $durationFormatted = $null
 }
+
+Write-Host "createdDate raw: $($latestRun.createdDate)"
+Write-Host "finishedDate raw: $($latestRun.finishedDate)"
+
+
+try {
+    $createdDate = $latestRun.createdDate
+    $finishedDate = $latestRun.finishedDate
+
+    # Handle case where it's an array
+    if ($createdDate -is [System.Array]) {
+        $createdDate = $createdDate[0]
+    }
+    if ($finishedDate -is [System.Array]) {
+        $finishedDate = $finishedDate[0]
+    }
+
+    $startTime = [datetime]::Parse($createdDate.ToString())
+    $endTime   = [datetime]::Parse($finishedDate.ToString())
+
+    $duration = New-TimeSpan -Start $startTime -End $endTime
+    $durationFormatted = '{0:00}:{1:00}:{2:00}' -f $duration.Hours, $duration.Minutes, $duration.Seconds
+}
+catch {
+    Write-Error "❌ General error occurred while processing pipeline telemetry: Failed to calculate duration: $_"
+    $durationFormatted = $null
+}
+
