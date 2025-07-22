@@ -1,0 +1,21 @@
+# --- Duration Calculation (Safe HH:mm:ss) ---
+try {
+    $createdDate = $latestRun.createdDate
+    $finishedDate = $latestRun.finishedDate
+
+    if (-not $createdDate -or -not $finishedDate) {
+        throw "Missing createdDate or finishedDate."
+    }
+
+    $startTime = [datetime]::Parse($createdDate.ToString())
+    $endTime   = [datetime]::Parse($finishedDate.ToString())
+
+    $duration = New-TimeSpan -Start $startTime -End $endTime
+
+    # Format as HH:mm:ss
+    $durationFormatted = '{0:00}:{1:00}:{2:00}' -f $duration.Hours, $duration.Minutes, $duration.Seconds
+}
+catch {
+    Write-Error "❌ General error occurred while processing pipeline telemetry: Failed to calculate duration: $_"
+    $durationFormatted = $null
+}
