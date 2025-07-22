@@ -1,0 +1,72 @@
+- task: PowerShell@2
+  displayName: "Send pipeline metrics to Splunk"
+  inputs:
+    targetType: 'inline'
+    script: |
+      $ErrorActionPreference = "Stop"
+
+      # Parameters & Secrets
+      $pipelineId = '${{ parameters.pipelineId }}'
+      $runId = '${{ parameters.runId }}'
+      $organization = "$(organization)"
+      $project = "$(project)"
+      $hecToken = "$(splunkHECToken)"
+      $pat = "$(azureDevOpsPAT)"
+
+      $metricsUrl = "https://ingest.<realm>.signalfx.com/v2/datapoint"
+
+      $headers = @{
+        Authorization = "Basic " + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$pat"))
+      }
+
+      try {
+        $runUrl = "https://dev.azure.com/$organization/$project/_apis/pipelines/$pipelineId/runs/$runId?api-version=7.1-preview.1"
+        $run = Invoke-RestMethod -Uri $runUrl -Headers $headers -Method Get
+
+        if (-not $run.finishedDate) {
+          Write-Host "❗ Run $runId not finished yet."
+          return
+        }
+
+        $startTime = Get-Date $run.createdDate
+        $endTime = Get-Date $run.finishedDate
+        $duration = [math]::Round((New-TimeSpan -Start $startTime -End $endTime).TotalSeconds, 2)
+
+        $epochNow = [int64]((Get-Date).ToUniversalTime() - [datetime]'1970-01-01').TotalSeconds
+
+        $dimensions = @{
+          pipelineId   = $pipelineId
+          runId        = $runId
+          pipelineName = $run.pipeline.name
+          project      = $project
+          status       = $run.state
+          result       = $run.result
+        }
+
+        $body = @(
+          @{
+            metric = "pipeline.duration.seconds"
+            value = $duration
+            dimensions = $dimensions
+            timestamp = $epochNow
+            type = "gauge"
+          },
+          @{
+            metric = "pipeline.run.status"
+            value = if ($run.result -eq "succeeded") { 1 } else { 0 }
+            dimensions = $dimensions
+            timestamp = $epochNow
+            type = "gauge"
+          }
+        ) | ConvertTo-Json -Depth 10
+
+        Invoke-RestMethod -Method Post -Uri $metricsUrl `
+          -Headers @{ "Authorization" = "Splunk $hecToken" } `
+          -Body $body `
+          -ContentType "application/json"
+
+        Write-Host "✅ Metrics for run $runId sent to Splunk Observability."
+      }
+      catch {
+        Write-Error "❌ Failed to send metrics: $_"
+      }
