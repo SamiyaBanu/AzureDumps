@@ -47,3 +47,9 @@ catch {
     $durationFormatted = $null
 }
 
+
+data('azure.pipeline.execution.details')
+  .filter(key='pipelineName', value='YourPipelineName')  // Optional
+  .group_by(['runId', 'status', 'result'])               // Add dimensions you want
+  .publish(label='Pipeline Duration by Run')
+
