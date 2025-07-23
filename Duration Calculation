@@ -53,3 +53,6 @@ data('azure.pipeline.execution.details')
   .group_by(['runId', 'status', 'result'])               // Add dimensions you want
   .publish(label='Pipeline Duration by Run')
 
+A = data("azure.pipeline.run.count", rollup="count").sum(by=["pipeline_name"])
+B = A.sum(by=["pipeline_name"]).publish(label="Pipeline Runs")
+
