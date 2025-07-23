@@ -1,4 +1,8 @@
-# --- Duration Calculation (Safe HH:mm:ss) ---
+#
+
+
+
+--- Duration Calculation (Safe HH:mm:ss) ---
 try {
     $createdDate = $latestRun.createdDate
     $finishedDate = $latestRun.finishedDate
@@ -95,6 +99,67 @@ foreach ($run in $pipelineRuns) {
     } catch {
         Write-Error "Failed for pipeline run $($run.id): $_"
     }
+}
+
+/////////////////////''''''''''''
+
+$runUrl = "https://dev.azure.com/$($squad)/_apis/pipelines/69023/runs?api-version=7.1-preview.1"
+
+$runData = Invoke-RestMethod -Uri $runUrl -Headers @{
+    Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN"
+} -Method Get
+
+$completedRuns = $runData.value | Where-Object { $_.state -eq "completed" }
+
+if (-not $completedRuns) {
+    Write-Host "No completed pipeline runs found."
+    return
+}
+
+foreach ($run in $completedRuns) {
+    if (-not $run.finishedDate) {
+        Write-Host "Run $($run.id) is not finished yet. Skipping telemetry."
+        continue
+    }
+
+    # Fetch branch and who triggered
+    $buildApiUrl = "https://dev.azure.com/$($squad)/_apis/build/builds/$($run.id)?api-version=7.1-preview.7"
+
+    try {
+        $buildDetails = Invoke-RestMethod -Uri $buildApiUrl -Headers @{
+            Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN"
+        } -Method Get
+
+        $branch = $buildDetails.sourceBranch
+        $triggeredBy = $buildDetails.requestedFor.displayName
+    } catch {
+        $branch = "unknown"
+        $triggeredBy = "unknown"
+    }
+
+    # Parse time & calculate duration
+    try {
+        $startTime = [datetime]::ParseExact($run.createdDate, "yyyy-MM-ddTHH:mm:ss.fffffffZ", $null)
+        $endTime = [datetime]::ParseExact($run.finishedDate, "yyyy-MM-ddTHH:mm:ss.fffffffZ", $null)
+        $duration = $endTime - $startTime
+        $durationStr = "{0:hh\:mm\:ss}" -f $duration
+    } catch {
+        $durationStr = "00:00:00"
+    }
+
+    Write-Host "-----------------------------"
+    Write-Host "RunID: $($run.id)"
+    Write-Host "Pipeline Name: $($run.name)"
+    Write-Host "Status: $($run.status)"
+    Write-Host "Result: $($run.result)"
+    Write-Host "Branch: $branch"
+    Write-Host "Triggered by: $triggeredBy"
+    Write-Host "Start Time: $startTime"
+    Write-Host "End Time: $endTime"
+    Write-Host "Duration: $durationStr"
+    Write-Host "-----------------------------`n"
+
+    # Optional: Send this data to Splunk or other observability tools
 }
 
 
