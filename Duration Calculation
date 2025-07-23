@@ -56,3 +56,45 @@ data('azure.pipeline.execution.details')
 A = data("azure.pipeline.run.count", rollup="count").sum(by=["pipeline_name"])
 B = A.sum(by=["pipeline_name"]).publish(label="Pipeline Runs")
 
+
+================
+foreach ($run in $pipelineRuns) {
+    try {
+        $createdDate = $run.createdDate
+        $finishedDate = $run.finishedDate
+
+        # Convert to datetime
+        $startTime = [datetime]::Parse($createdDate.ToString())
+        $endTime = [datetime]::Parse($finishedDate.ToString())
+
+        # Convert to epoch (in milliseconds)
+        $timestamp = [int64](($startTime.ToUniversalTime() - [datetime]'1970-01-01').TotalSeconds * 1000)
+
+        # Calculate duration in seconds
+        $duration = [int]((Get-Date $endTime).ToUniversalTime() - (Get-Date $startTime).ToUniversalTime()).TotalSeconds
+
+        # Build dimensions (add whatever you need)
+        $dimensions = @{
+            "pipelineName" = $run.name
+            "result"       = $run.result
+            "status"       = $run.status
+        }
+
+        # Send as gauge
+        $gauge = @{
+            "metric"    = "pipeline.execution.duration"
+            "value"     = $duration
+            "timestamp" = $timestamp      # ✅ this makes sure time in Splunk is correct
+            "dimensions" = $dimensions
+        }
+
+        # Convert to JSON and send (example using Invoke-RestMethod)
+        $jsonBody = $gauge | ConvertTo-Json -Depth 10
+        Invoke-RestMethod -Method Post -Uri $splunkUrl -Body $jsonBody -ContentType "application/json"
+
+    } catch {
+        Write-Error "Failed for pipeline run $($run.id): $_"
+    }
+}
+
+
