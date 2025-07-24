@@ -1,0 +1,83 @@
+parameters: {}
+
+jobs:
+- job: SendToSplunk
+  steps:
+    - powershell: |
+        # === Set state file path ===
+        $stateFile = "$(Build.SourcesDirectory)\.pipeline_state\last_sent_run_id.txt"
+
+        # === Create folder if it doesn't exist ===
+        if (!(Test-Path (Split-Path $stateFile))) {
+            New-Item -ItemType Directory -Path (Split-Path $stateFile) -Force | Out-Null
+        }
+
+        # === Initialize if missing ===
+        if (!(Test-Path $stateFile)) {
+            Set-Content $stateFile "0"
+        }
+
+        # === Read and trim last sent run ID ===
+        $lastSentRunId = (Get-Content $stateFile -First 1).Trim()
+        Write-Host "Last sent run ID: $lastSentRunId"
+
+        # === Replace this with your actual logic to fetch run data ===
+        $runs = Invoke-RestMethod -Uri "https://dev.azure.com/your-org/your-project/_apis/pipelines/your-pipeline-id/runs?api-version=7.0" -Headers @{Authorization = "Basic yourPAT=="} 
+
+        foreach ($run in $runs.value | Sort-Object id | Select-Object -Last 5) {
+            if ($run.id -le [int]$lastSentRunId) {
+                Write-Host "Skipping already sent run ID: $($run.id)"
+                continue
+            }
+
+            # === Example dimensions you would send ===
+            Write-Host "Sending run $($run.id) to Splunk..."
+            # TODO: Your Splunk send logic goes here
+
+            # === Update the state file with the latest run ID ===
+            Set-Content $stateFile "$($run.id)"
+        }
+      displayName: 'Send pipeline runs to Splunk'
+
+    # 📦 Save updated state for future runs
+    - task: PublishPipelineArtifact@1
+      displayName: 'Save updated run ID state'
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)/.pipeline_state/last_sent_run_id.txt'
+        artifact: telemetryState
+
+
+
+
+///////////////////////////////////
+
+trigger:
+- main
+
+pool:
+  vmImage: 'windows-latest'  # Or your custom self-hosted agent pool
+
+stages:
+- stage: Telemetry
+  displayName: 'Telemetry to Splunk'
+  jobs:
+    - job: TelemetryJob
+      displayName: 'Send to Splunk'
+      steps:
+        - checkout: self
+
+        # 🔽 Download previously saved state (last run ID)
+        - task: DownloadPipelineArtifact@2
+          displayName: 'Download last run ID state'
+          inputs:
+            artifact: telemetryState
+            path: '$(Build.SourcesDirectory)/.pipeline_state'
+
+        # 🧠 Call the logic template
+        - template: splunk.yml
+
+========================
+# Ignore the persistent state folder
+.pipeline_state/
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
