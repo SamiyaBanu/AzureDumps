@@ -162,4 +162,58 @@ foreach ($run in $completedRuns) {
     # Optional: Send this data to Splunk or other observability tools
 }
 
+\\\\\\\\\\\\\\\\\\\\\\/////////////////////
+
+
+# === Deduplication: Check last sent run ID ===
+$stateFile = "$(Pipeline.Workspace)\last_sent_run_id.txt"
+if (!(Test-Path $stateFile)) {
+    New-Item -Path (Split-Path $stateFile) -ItemType Directory -Force | Out-Null
+    Set-Content $stateFile "0"
+}
+$lastSentRunId = Get-Content $stateFile | Out-String | Trim
+
+# === Skip if already sent ===
+if ($run.id -le [int]$lastSentRunId) {
+    Write-Host "Run $($run.id) already sent to Splunk. Skipping."
+    continue
+}
+
+# === Duration calculation ===
+$startTime = Get-Date $buildDetails.queueTime
+$endTime = Get-Date $buildDetails.finishTime
+$durationSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
+$timestamp = [int64]((Get-Date $endTime).ToUniversalTime() - [datetime]'1970-01-01').TotalMilliseconds
+
+# === Splunk payload ===
+$splunkPayload = @{
+    metric = "azure.pipeline.run"
+    timestamp = $timestamp
+    value = 1
+    dimensions = @{
+        runId        = $run.id
+        pipelineName = "$($buildDetails.definition.name)"
+        result       = $buildDetails.result
+        status       = $buildDetails.status
+        triggeredBy  = $buildDetails.requestedFor.displayName
+        branch       = $buildDetails.sourceBranch -replace 'refs/heads/', ''
+        duration     = "$durationSeconds"
+        createdDate  = $buildDetails.queueTime
+        finishedDate = $buildDetails.finishTime
+    }
+}
+
+# === Send to Splunk ===
+$splunkURL = "https://splunk-endpoint/metrics"
+$splunkToken = "your-splunk-token"
+
+Invoke-RestMethod -Uri $splunkURL -Method Post -Body (ConvertTo-Json @($splunkPayload) -Depth 5) -Headers @{
+    Authorization = "Splunk $splunkToken"
+    "Content-Type" = "application/json"
+}
+
+Write-Host "✅ Sent run ID $($run.id) to Splunk"
+
+# === Save the last sent run ID ===
+Set-Content -Path $stateFile -Value $run.id
 
