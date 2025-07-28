@@ -1,46 +1,36 @@
-parameters:
-  - name: telemetryPipelineId
-    type: number
-  - name: organization
-    type: string
-  - name: project
-    type: string
+inputs:
+  targetType: 'inline'
+  script: |
+    $headers = @{
+      Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN"
+      "Content-Type" = "application/json"
+    }
 
-jobs:
-- job: TriggerTelemetry
-  displayName: Trigger Telemetry Pipeline
-  steps:
-    - script: |
-        echo "Triggering Telemetry Pipeline..."
-
-        ORG="${{ parameters.organization }}"
-        PROJECT="${{ parameters.project }}"
-        PIPELINE_ID=${{ parameters.telemetryPipelineId }}
-
-        echo "Pipeline ID: $PIPELINE_ID"
-        echo "Organization: $ORG"
-        echo "Project: $PROJECT"
-
-        API_URL="https://dev.azure.com/$ORG/$PROJECT/_apis/pipelines/$PIPELINE_ID/runs?api-version=7.0"
-
-        JSON='{
-          "resources": {
-            "repositories": {
-              "self": {
-                "refName": "'"${BUILD_SOURCEBRANCH}"'"
-              }
-            }
+    $body = @{
+      resources = @{
+        repositories = @{
+          self = @{
+            refName = "$(Build.SourceBranch)"
           }
-        }'
+        }
+      }
+    } | ConvertTo-Json -Depth 10
 
-        echo "Payload:"
-        echo "$JSON"
+    $runUrl = "https://dev.azure.com/ORG_NAME/PROJECT_NAME/_apis/pipelines/PIPELINE_ID/runs?api-version=7.0"
 
-        echo "Calling API: $API_URL"
-        curl -X POST "$API_URL" \
-          -H "Content-Type: application/json" \
-          -H "Authorization: Bearer $SYSTEM_ACCESSTOKEN" \
-          -d "$JSON"
-      env:
-        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-      displayName: Invoke Telemetry via REST API
+    try {
+      Write-Host "Triggering pipeline at URL: $runUrl"
+      $response = Invoke-RestMethod -Uri $runUrl -Method POST -Headers $headers -Body $body
+      Write-Host "Pipeline triggered successfully:"
+      Write-Host ($response | ConvertTo-Json -Depth 5)
+    } catch {
+      Write-Host "❌ Error triggering pipeline"
+      Write-Host $_.Exception.Message
+      Write-Host $_.Exception.Response
+      $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+      $reader.BaseStream.Position = 0
+      $reader.DiscardBufferedData()
+      $responseBody = $reader.ReadToEnd()
+      Write-Host "Response Body:"
+      Write-Host $responseBody
+    }
