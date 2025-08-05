@@ -1,0 +1,191 @@
+Splunk Observability Dashboard – End-to-End Implementation Documentation
+✅ Objective
+The goal of this implementation is to track and monitor the execution of our Azure DevOps deployment pipelines by sending critical telemetry data to Splunk Observability Cloud. This enables us to visualize pipeline performance, stage/task durations, and success/failure rates, aiding in data-driven decisions and faster troubleshooting.
+
+🔁 Telemetry Approaches Implemented
+We used two complementary approaches to collect and push telemetry data:
+
+1. Inline Telemetry (Integrated in Deployment Pipeline)
+Telemetry is sent immediately after each stage completes within the main deployment pipeline.
+
+Uses a PowerShell script to collect metadata such as:
+
+Task/Stage name
+
+Status (Success/Failure)
+
+Start time, End time, Duration
+
+Environment or build metadata
+
+Script sends the data to Splunk Observability using HTTP Event Collector (HEC) via REST API.
+
+Pros:
+
+Real-time data flow
+
+Minimal delay
+
+Easy to associate stage performance within the actual execution context
+
+Limitations:
+
+If the pipeline fails in early stages, downstream stages do not send telemetry.
+
+Difficult to track the final overall status or pipeline-level duration since data is sent mid-execution.
+
+Generates multiple event logs per stage/task, not a holistic view.
+
+2. Dedicated Telemetry Pipeline (Decoupled from Deployment Pipeline)
+To overcome the above limitations, a secondary telemetry pipeline was created. This pipeline is:
+
+Triggered via REST API call from the final stage of the main deployment pipeline.
+
+Fetches pipeline run data from Azure DevOps using Azure DevOps REST APIs.
+
+Collects:
+
+Pipeline start time, end time
+
+Total duration
+
+Final result (Succeeded/Failed/Canceled)
+
+Summary of stages
+
+Technical flow:
+
+Final stage of deployment pipeline triggers telemetry pipeline via REST API.
+
+The telemetry pipeline:
+
+Calls GET https://dev.azure.com/{org}/{project}/_apis/pipelines/{pipelineId}/runs?api-version=6.0-preview.1
+
+Extracts finishedDate, status, stages, and durationInSeconds
+
+Deduplicates previously sent data
+
+Formats the data and sends it to Splunk Observability Cloud using HTTP POST to HEC endpoint.
+
+Pros:
+
+Captures final status of the entire pipeline
+
+Handles backfill and missed telemetry due to failures
+
+Sends a single event per pipeline execution
+
+📊 Dashboard Details
+We created a comprehensive dashboard using Splunk Observability Cloud with the following widgets:
+
+1. Gauge Charts
+Used to show real-time duration metrics.
+
+Dimensions used:
+
+stage_name
+
+pipeline_name
+
+status
+
+Value: Stage or pipeline duration (seconds/minutes)
+
+2. Time Series Line Chart
+Tracks execution over time
+
+Helps compare performance across days/releases
+
+3. Bar Chart
+Displays status count by stage or environment
+
+Y-axis customized to show stage names (not time)
+
+4. Error Alerts
+If no data is present for a selected time range, a “No deployments done in the selected time range” message appears instead of showing an empty chart.
+
+🔐 Data Structure & Format
+Each telemetry event sent to Splunk includes:
+
+json
+Copy
+Edit
+{
+  "event": "pipeline_telemetry",
+  "pipeline_name": "Deploy-App",
+  "stage": "Deploy",
+  "status": "Succeeded",
+  "start_time": "2025-08-04T09:00:00Z",
+  "end_time": "2025-08-04T09:10:00Z",
+  "duration": 600,
+  "triggered_by": "Manual",
+  "environment": "Production"
+}
+🌐 REST API Usage
+Trigger telemetry pipeline from deployment pipeline:
+
+POST https://dev.azure.com/{org}/{project}/_apis/pipelines/{telemetryPipelineId}/runs?api-version=6.0-preview.1
+
+Fetch run metadata:
+
+GET /pipelines/{pipelineId}/runs
+
+GET /pipelines/{pipelineId}/runs/{runId}/stages
+
+Authentication: System Access Token ($env:SYSTEM_ACCESSTOKEN or PAT)
+
+Retry & Timeout Handling: Retry logic added to handle API failure scenarios.
+
+🧠 Design Considerations
+Stage-wise telemetry was helpful for detailed troubleshooting, but not sufficient for summary insights.
+
+Second approach ensures data completeness, especially for failed deployments.
+
+Used createdDate, finishedDate, and state == completed to filter and deduplicate events.
+
+Gauges were configured carefully to:
+
+Display % complete
+
+Avoid duplicate runs
+
+Reflect true duration per stage/pipeline
+
+🗃️ Data Retention & Accuracy
+Telemetry data stored in Splunk Observability for 30 days (default retention).
+
+Deduplication ensures no duplicate events are sent.
+
+Events are sent with timestamp based on actual run times, not ingestion time.
+
+🚀 Future Enhancements
+Auto-alerts for failed pipelines
+
+Enrich data with user info (triggered by whom)
+
+Add support for parallel stage visualization
+
+✅ Conclusion
+This implementation ensures:
+
+Real-time and post-run telemetry visibility
+
+Reliable and complete pipeline observability
+
+Improved debugging, analysis, and decision-making
+
+Both approaches complement each other:
+
+Inline telemetry gives per-stage visibility
+
+Telemetry pipeline gives overall context
+
+Let me know if you'd like this in PDF, DOCX, or Markdown format for sharing with your team.
+
+
+
+
+
+
+
+ChatGPT can make mistakes. Check important info. See Cookie Preferences.
