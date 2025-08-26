@@ -1,0 +1,58 @@
+param()
+
+$ErrorActionPreference = "Stop"
+$ErrorMessages = @()
+
+try {
+    # Optional: wait for logs to settle
+    Start-Sleep -Seconds 10
+
+    # --- 1. Get Build Metadata (branch + commit + pipeline) ---
+    $buildDetails = Invoke-RestMethod -Uri "https://dev.azure.com/$env:SYSTEM_COLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_apis/build/builds/$env:BUILD_BUILDID?api-version=7.1-preview.7" -Headers @{
+        Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN"
+    } -Method Get
+
+    $branchName    = $buildDetails.sourceBranch
+    $commitId      = $buildDetails.sourceVersion
+    $pipelineName  = $buildDetails.definition.name
+    $buildNumber   = $buildDetails.buildNumber
+    $buildId       = $buildDetails.id
+
+    Write-Host "Enriching timeline with Branch=$branchName, Commit=$commitId, Pipeline=$pipelineName"
+
+    # --- 2. Get Timeline (all jobs/tasks) ---
+    $buildTimeline = Invoke-RestMethod -Uri "https://dev.azure.com/$env:SYSTEM_COLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_apis/build/builds/$env:BUILD_BUILDID/timeline?api-version=7.1-preview.1" -Headers @{
+        Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN"
+    } -Method Get
+
+    # --- 3. Loop through timeline records ---
+    foreach ($record in $buildTimeline.records) {
+        if ($record.type -eq "Task") {
+            # Create enriched object
+            $task = [PSCustomObject]@{
+                buildId       = $buildId
+                buildNumber   = $buildNumber
+                pipelineName  = $pipelineName
+                branch        = $branchName
+                commit        = $commitId
+                stageName     = $record.parentId
+                taskId        = $record.id
+                taskName      = $record.name
+                taskResult    = $record.result
+                taskState     = $record.state
+                startTime     = $record.startTime
+                finishTime    = $record.finishTime
+                durationSecs  = if ($record.startTime -and $record.finishTime) {
+                                    [math]::Round(((Get-Date $record.finishTime) - (Get-Date $record.startTime)).TotalSeconds,2)
+                                } else { $null }
+            }
+
+            # Write enriched JSON (good for Splunk ingestion)
+            $task | ConvertTo-Json -Depth 5 -Compress
+        }
+    }
+
+} catch {
+    Write-Error "Error: $_"
+    $ErrorMessages += $_
+}
